@@ -23,6 +23,8 @@ entity HF_interface is
         gp_out : out std_logic_vector(5 downto 0);
         gp_in : in std_logic_vector(5 downto 0)
     );
+    attribute keep_hierarchy : string;
+    attribute keep_hierarchy of HF_interface : entity is "yes";
 end entity;
 
 architecture structural of HF_interface is
