@@ -1,0 +1,126 @@
+#!/usr/bin/env python3
+import sys
+import mimasdriver
+
+VERSION = "1.0.0"
+
+def print_info():
+    print("Mimas V1 FPGA programmer")
+    print("Copyright (c) 2021, Joppe Blondel")
+    print(f"Version {VERSION} - BSD-2 licence")
+
+def print_usage():
+    print_info()
+    print()
+    print("Usage: mimas [-h] [-p bitfile] [-r bitfile] [-P addr binfile] [-R addr length binfile]")
+    print("-h                           : prints this help message")
+    print("-p bitfile                   : program a bitfile")
+    print("-r bitfile                   : read the programmed bitfile (reads 512KB)")
+    print("-P addr binfile              : program the SPI flash from a specific address. Address MUST be in hexadecimal")
+    print("-R addr length binfile       : read the SPI flash from a specific address for a specific length. Address and length MUST be in hexadecimal")
+
+if __name__=="__main__":
+    i = 1
+    if len(sys.argv)==1:
+        print_info()
+        exit(1)
+    while i<len(sys.argv):
+        arg = sys.argv[i]
+        r = 0
+
+        # ###################
+        # ###################
+        if arg=="-h":
+            print_usage()
+
+        # ###################
+        # ###################
+
+        elif arg=="-p":
+            i += 1
+            if i==len(sys.argv):
+                print("Bitfile not specified, see 'mimasprog -h' for usage")
+                exit(1)
+            file = sys.argv[i]
+
+            with mimasdriver.MimasInterface() as mif:
+                def pfunc():
+                    print('.', end='', flush=True)
+                print("Programming SPI flash")
+                mif.flash_program(file, pfunc=pfunc)
+                print('')
+
+        # ###################
+        # ###################
+
+        elif arg=="-r":
+            i += 1
+            if i==len(sys.argv):
+                print("Bitfile not specified, see 'mimasprog -h' for usage")
+                exit(1)
+            file = sys.argv[i]
+
+            with mimasdriver.MimasInterface() as mif:
+                def pfunc():
+                    print('.', end='', flush=True)
+                print("Reading SPI flash")
+                mif.flash_read(file, pfunc=pfunc)
+                print('')
+
+        # ###################
+        # ###################
+
+        elif arg=="-P":
+            i += 1
+            if i==len(sys.argv):
+                print("Address not specified, see 'mimasprog -h' for usage")
+                exit(1)
+            addr = int(sys.argv[i], 16)
+            i += 1
+            if i==len(sys.argv):
+                print("Binfile not specified, see 'mimasprog -h' for usage")
+                exit(1)
+            file = sys.argv[i]
+
+            with mimasdriver.MimasInterface() as mif:
+                def pfunc():
+                    print('.', end='', flush=True)
+                print("Programming SPI flash")
+                mif.flash_program(file, pfunc=pfunc, addr=addr)
+                print('')
+
+        # ###################
+        # ###################
+
+        elif arg=="-R":
+            i += 1
+            if i==len(sys.argv):
+                print("Address not specified, see 'mimasprog -h' for usage")
+                exit(1)
+            addr = int(sys.argv[i], 16)
+            i += 1
+            if i==len(sys.argv):
+                print("Length not specified, see 'mimasprog -h' for usage")
+                exit(1)
+            length = int(sys.argv[i], 16)
+            i += 1
+            if i==len(sys.argv):
+                print("Binfile not specified, see 'mimasprog -h' for usage")
+                exit(1)
+            file = sys.argv[i]
+
+            with mimasdriver.MimasInterface() as mif:
+                def pfunc():
+                    print('.', end='', flush=True)
+                print("Reading SPI flash starting at %08x for %08x"%(addr, length))
+                mif.flash_read(file, pfunc=pfunc, addr=addr, flen=length)
+                print('')
+
+        # ###################
+        # ###################
+
+        else:
+            print("Unknown command")
+            print_usage()
+            exit(1)
+        i += 1
