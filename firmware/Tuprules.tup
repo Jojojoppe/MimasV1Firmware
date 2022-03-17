@@ -1,0 +1,6 @@
+.gitignore
+
+!cc = |> ^ CC %o ^ $(CC) $(CFLAGS) -o%o %f |> %B.p1
+!as = |> ^ AS %o ^ $(AS) $(ASFLAGS) -o%o %f |> %B.o
+!ld = |> ^ LD %o ^ $(LD) $(LDFLAGS) -o%o %f |>
+!ar = |> ^ AR %o ^ $(AR) -rcs %o %f |>
