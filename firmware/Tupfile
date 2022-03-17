@@ -1,10 +1,10 @@
 include_rules
 
-MP_PATH = /media/ssd/packages/xc8/bin
-CC = $(MP_PATH)/xc8
-AS = $(MP_PATH)/xc8
-AR = $(MP_PATH)/xc8
-LD = $(MP_PATH)/xc8
+MP_PATH = 
+CC = $(MP_PATH)xc8
+AS = $(MP_PATH)xc8
+AR = $(MP_PATH)xc8
+LD = $(MP_PATH)xc8
 
 src_c = \
     usb_descriptors.c usb_device.c usb_device_generic.c usb_events.c \
