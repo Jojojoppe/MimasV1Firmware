@@ -284,15 +284,15 @@ class exec_ISE:
         self.create_outdir(target)
         self.enter_builddir()
         part = f"{self.config.get('target', 'device', fallback='_d_')}{self.config.get('target', 'package', fallback='_p_')}{self.config.get('target', 'speedgrade', fallback='_s_')}"
-        cons = self.config.get(target, 'src_constraints', fallback='__con__')
+        cons = f"{self.curdir}/{self.config.get(target, 'src_constraints', fallback='__con__')}"
         with open('paproj.tcl', 'w') as f:
-            f.write(f'create_project -name paproj -dir paproj -part {part}\n')
+            f.write(f'create_project -name paproj -dir paproj -part {part} -force\n')
             f.write('set_property design_mode GateLvl [get_property srcset [current_run -impl]]\n')
             f.write(f"set_property edif_top_file {self.curdir}/{self.outdir}/{target}/{target}.ngc [get_property srcset [current_run]]\n")
             f.write(f"add_files [list {{{cons}}}] -fileset [get_property constrset [current_run]]\n")
             f.write(f"set_property target_constrs_file {cons} [current_fileset -constrset]\n")
             f.write(f"link_design\nread_xdl -file {self.curdir}/{self.outdir}/{target}/{target}.ncd\n")
-        pid = subprocess.Popen('planAhead -source paproj.tcl', shell=True, stdout=subprocess.DEVNULL, stder=None)
+        pid = subprocess.Popen('planAhead -source paproj.tcl', shell=True) #, stdout=subprocess.DEVNULL, stderr=None)
         res = pid.wait()
         self.leave_builddir()
 
@@ -328,6 +328,8 @@ class exec_ISE:
         res = pid.returncode
         print('')
         if res!=0:
+            self.leave_builddir()
+            shutil.copyfile(f'{self.builddir}/fuse.log', f'{self.outdir}/{target}/synth.log')
             exit(res)
 
         with open('sim.tcl', 'w') as f:

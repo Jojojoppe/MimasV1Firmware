@@ -79,10 +79,18 @@ void hfinterface_transfer_set(){
             &hfinterface_ep1_lenout, &ep1)){
         status |= 2;
     }
-    
+
+    // spi_init_slow();
+    // spi_deselect_flash();
+
     status = hfinterface_transfer(status);
     ep0 = hfinterface_transfer(ep0);
     ep1 = hfinterface_transfer(ep1);
+    // status = spi_transfer(status);
+    // ep0 = spi_transfer(ep0);
+    // ep1 = spi_transfer(ep1);
+
+    // spi_highz();
     
     hfinterface_gpio_in = status>>2;
     if(status&1){
