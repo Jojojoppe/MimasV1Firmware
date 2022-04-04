@@ -37,6 +37,9 @@ def wbWrite(addr:int, data:int, mif:mimasdriver.MimasInterface)->int:
 def runtest(test_size):
     with mimasdriver.MimasInterface() as mif:
         wbReset(mif)
+        # resp = wbWrite(0, 0xaabbccdd, mif)
+        # print(resp)
+        # return
         for i in range(test_size):
             resp = wbWrite(0, i, mif)
             if resp != 0xaa:
@@ -57,4 +60,4 @@ bps = float(TEST_SIZE*30)/t
 print(bps, 'bps over SPI (roughly)')
 
 bps = float(TEST_SIZE)/t
-print(bps, 'transactions over wishbone')
+print(bps, 'transactions per second over wishbone')

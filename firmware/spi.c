@@ -7,9 +7,18 @@ void spi_highz(){
     SSPCON1bits.SSPEN = 0;
     
     // SPI ports as input
-    SDO_TRIS = INPUT;
+    // SDO_TRIS = INPUT;
+    // SDI_TRIS = INPUT;
+    // SCK_TRIS = INPUT;
+
+    SDI_ANS = DIGITAL;
+    SDO_ANS = DIGITAL;
     SDI_TRIS = INPUT;
-    SCK_TRIS = INPUT;
+    SDO_TRIS = OUTPUT;
+    SCK_TRIS = OUTPUT;
+
+    SCK_LAT = 0;
+    SDO_LAT = 0;
     
     // Disable chip selects
     SS_FLASH_TRIS = INPUT;
@@ -60,11 +69,11 @@ void spi_init_slow(){
     // Clock idle at low
     SSPCON1bits.CKP = 0;
     // SPI in master mode Fosc/16
-    SSPCON1bits.SSPM = 2;
+    SSPCON1bits.SSPM = 1;
     // SPI sampled at middle of data output time
     SSPSTATbits.SMP = 0;
     // SPI transmission at clock active to idle
-    SSPSTATbits.CKE = 1;
+    SSPSTATbits.CKE = 0;
     // Enable SPI
     SSPCON1bits.SSPEN = 1;
 }

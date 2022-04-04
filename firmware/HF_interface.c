@@ -67,7 +67,7 @@ uint8_t hfinterface_transfer(uint8_t dout){
     return din;
 }
 
-void hfinterface_transfer_set(){
+uint8_t hfinterface_transfer_set(){
     uint8_t status = hfinterface_gpio_out<<2;
     uint8_t ep0 = 0;
     uint8_t ep1 = 0;
@@ -80,27 +80,31 @@ void hfinterface_transfer_set(){
         status |= 2;
     }
 
-    // spi_init_slow();
-    // spi_deselect_flash();
+    spi_init_slow();
+    spi_deselect_flash();
 
-    status = hfinterface_transfer(status);
-    ep0 = hfinterface_transfer(ep0);
-    ep1 = hfinterface_transfer(ep1);
-    // status = spi_transfer(status);
-    // ep0 = spi_transfer(ep0);
-    // ep1 = spi_transfer(ep1);
+    // status = hfinterface_transfer(status);
+    // ep0 = hfinterface_transfer(ep0);
+    // ep1 = hfinterface_transfer(ep1);
+    status = spi_transfer(status);
+    ep0 = spi_transfer(ep0);
+    ep1 = spi_transfer(ep1);
 
-    // spi_highz();
+    spi_highz();
     
+    uint8_t retval = 0;
     hfinterface_gpio_in = status>>2;
     if(status&1){
         hfinterface_buffer_wr(hfinterface_ep0_bufin, &hfinterface_ep0_pinwr,
                 &hfinterface_ep0_lenin, ep0);
+        retval = 1;
     }
     if(status&2){
         hfinterface_buffer_wr(hfinterface_ep1_bufin, &hfinterface_ep1_pinwr,
                 &hfinterface_ep1_lenin, ep1);
+        retval = 1;
     }
+    return retval;
 }
 
 void hfinterface_init(){
@@ -161,11 +165,13 @@ void hfinterface_task(){
             // Do a transfer if space left in bufin's
             // Try 16 times
             for(uint8_t i=0; i<16; i++){
+            // for(uint8_t i=0; i<4; i++){
                 // When there is no space left stop trying
                 uint8_t maxtransferlength = MIN(16-hfinterface_ep0_lenin, 16-hfinterface_ep1_lenin);
                 if(maxtransferlength==0) break;
 
-                hfinterface_transfer_set();
+                // Transfer data and stop if nothing received of send buffers empty
+                if(hfinterface_transfer_set()==0 || (hfinterface_ep0_lenout==0 && hfinterface_ep1_lenout==0)) break;
             }
             
             hfinterface_action = HFINTERFACE_TASK_NOP;
