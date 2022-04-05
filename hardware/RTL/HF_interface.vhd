@@ -74,8 +74,6 @@ architecture structural of HF_interface is
     signal d_ep0_buf_wr : std_logic;
     signal d_ep1_buf : std_logic_vector(7 downto 0);
     signal d_ep1_buf_wr : std_logic;
-    signal ibuf_ack0 : std_logic;
-    signal ibuf_ack1 : std_logic;
 
 begin
 
@@ -91,20 +89,20 @@ begin
             if ep0_wr='1' then
                 d_ep0_buf <= ep0_din;
                 d_ep0_buf_wr <= '1';
-            elsif ibuf_ack0 = '1' then
+            elsif done='1' then
                 d_ep0_buf_wr <= '0';
             end if;
             if ep1_wr='1' then
                 d_ep1_buf <= ep1_din;
                 d_ep1_buf_wr <= '1';
-            elsif ibuf_ack1 = '1' then
+            elsif done='1' then
                 d_ep1_buf_wr <= '0';
             end if;
         end if;
     end process;
 
-    ep0_busy <= d_ep0_buf_wr;
-    ep1_busy <= d_ep1_buf_wr;
+    ep0_busy <= d_ep0_buf_wr or ep0_wr;
+    ep1_busy <= d_ep1_buf_wr or ep1_wr;
 
     -- Input signal clock conversion
     ccSCK : component input_sync port map(
@@ -126,8 +124,6 @@ begin
             sr_status <= (others=>'0');
             sr_ep0 <= (others=>'0');
             sr_ep1 <= (others=>'0');
-            ibuf_ack0 <= '0';
-            ibuf_ack1 <= '0';
         elsif rising_edge(ACLK) then
             if ne_SCK='1' then
                 sr_ep1 <= sr_ep1(6 downto 0) & i_SDI;
@@ -137,18 +133,14 @@ begin
                 sr_status <= (others => '0');
                 sr_ep0 <= (others => '0');
                 sr_ep1 <= (others => '0');
-                ibuf_ack0 <= '0';
-                ibuf_ack1 <= '0';
             elsif busy='0' then
                 if d_ep0_buf_wr='1' then
                     sr_status(0) <= '1';
                     sr_ep0 <= d_ep0_buf;
-                    ibuf_ack0 <= '1';
                 end if;
                 if d_ep1_buf_wr='1' then
                     sr_status(1) <= '1';
                     sr_ep1 <= d_ep1_buf;
-                    ibuf_ack1 <= '1';
                 end if;
             elsif count=0 then
                 sr_status(7 downto 2) <= gp_in;

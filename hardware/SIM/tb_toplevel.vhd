@@ -30,19 +30,16 @@ architecture behavioural of tb_toplevel is
     signal SCK, SDI, SDO : std_logic := '0';
     signal CS : std_logic := '1';
 
-    -- PROCEDURE
-    -- ---------
+    -- PROCEDURES
+    -- ----------
     procedure SPI_TRANSFER(
         signal SCK : out std_logic;
         signal SDI : out std_logic;
         signal SDO : in std_logic;
-        signal CS : out std_logic;
         variable d : inout std_logic_vector
     ) is
         constant SPI_PERIOD : time := 350 ns;
     begin
-
-        -- report "Sending " & integer'image(to_integer(unsigned(d)));
         for i in 0 to 7 loop
             SDI <= d(7);
             SCK <= '1';
@@ -53,184 +50,33 @@ architecture behavioural of tb_toplevel is
         end loop;
         SCK <= '0';
         SDI <= '0';
-        -- report "Received " & integer'image(to_integer(unsigned(d)));
+        wait for SPI_PERIOD;
     end procedure;
 
-    procedure SPI_EP0_WR(
+    procedure HF_TRANSFER(
         signal SCK : out std_logic;
         signal SDI : out std_logic;
         signal SDO : in std_logic;
         signal CS : out std_logic;
-        variable addr : in std_logic_vector;
-        variable data : in std_logic_vector;
-        variable resp : inout std_logic_vector
+        variable status : inout std_logic_vector;
+        variable ep0 : inout std_logic_vector;
+        variable ep1 : inout std_logic_vector 
     ) is
-        variable d : std_logic_vector(7 downto 0);
-        variable cnt : integer;
-        constant SPI_PERIOD : time := 350 ns;
+        constant HF_HOLDOFF : time := 500 ns;
     begin
-        report "Sending " & integer'image(to_integer(unsigned(data))) & " to address " & integer'image(to_integer(unsigned(addr)));
+        wait for HF_HOLDOFF;
         CS <= '0';
-        wait for SPI_PERIOD*2;
+        wait for HF_HOLDOFF;
 
-        d := "00000001";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := x"01";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := x"00";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        
-        d := "00000001";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := addr(31 downto 24);
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := x"00";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := "00000001";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := addr(23 downto 16);
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := x"00";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := "00000001";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := addr(15 downto 8);
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := x"00";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := "00000001";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := addr(7 downto 0);
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := x"00";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
+        SPI_TRANSFER(SCK, SDI, SDO, status);
+        wait for HF_HOLDOFF;
+        SPI_TRANSFER(SCK, SDI, SDO, ep0);
+        wait for HF_HOLDOFF;
+        SPI_TRANSFER(SCK, SDI, SDO, ep1);
 
-        d := "00000001";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := data(31 downto 24);
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := x"00";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := "00000001";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := data(23 downto 16);
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := x"00";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := "00000001";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := data(15 downto 8);
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := x"00";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := "00000001";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := data(7 downto 0);
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := x"00";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-
-        cnt := 32;
-        while cnt>0 loop
-
-            d := "00000000";
-            SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-            resp := "00000000";
-            SPI_TRANSFER(SCK, SDI, SDO, CS, resp);
-            d := "00000000";
-            SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-
-            if not(resp=x"00") then
-                exit;
-            end if;
-
-            cnt := cnt - 1;
-        end loop;
-        if cnt=0 then
-            report "SPI EP0 Write timeout..." severity failure;
-        else
-            report "Response " & integer'image(to_integer(unsigned(resp)));
-        end if;
-
+        wait for HF_HOLDOFF;
         CS <= '1';
-        wait for SPI_PERIOD*2;
-
-    end procedure;
-
-    procedure SPI_EP0_RD(
-        signal SCK : out std_logic;
-        signal SDI : out std_logic;
-        signal SDO : in std_logic;
-        signal CS : out std_logic;
-        variable addr : in std_logic_vector;
-        variable data : out std_logic_vector;
-        variable resp : inout std_logic_vector
-    ) is
-        variable d : std_logic_vector(7 downto 0);
-        variable cnt : integer;
-        constant SPI_PERIOD : time := 350 ns;
-    begin
-        report "Reading " & " from address " & integer'image(to_integer(unsigned(addr)));
-        CS <= '0';
-        wait for SPI_PERIOD*2;
-
-        d := "00000001";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := x"02";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := x"00";
-
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := "00000001";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := addr(31 downto 24);
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := x"00";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := "00000001";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := addr(23 downto 16);
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := x"00";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := "00000001";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := addr(15 downto 8);
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := x"00";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := "00000001";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := addr(7 downto 0);
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-        d := x"00";
-        SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-
-        cnt := 32;
-        while cnt>0 loop
-
-            d := "00000000";
-            SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-            resp := "00000000";
-            SPI_TRANSFER(SCK, SDI, SDO, CS, resp);
-            d := "00000000";
-            SPI_TRANSFER(SCK, SDI, SDO, CS, d);
-
-            if not(resp=x"00") then
-                exit;
-            end if;
-
-            cnt := cnt - 1;
-        end loop;
-        if cnt=0 then
-            report "SPI EP0 Write timeout..." severity failure;
-        else
-            report "Response " & integer'image(to_integer(unsigned(resp)));
-        end if;
-
-        CS <= '1';
-        wait for SPI_PERIOD*2;
-
+        wait for HF_HOLDOFF;
     end procedure;
 
 begin
@@ -238,22 +84,125 @@ begin
     ACLK <= not ACLK after 10 ns;
 
     process
-        variable resp : std_logic_vector(7 downto 0);
-        variable data : std_logic_vector(31 downto 0);
-        variable addr : std_logic_vector(31 downto 0);
+        variable status : std_logic_vector(7 downto 0);
+        variable ep0 : std_logic_vector(7 downto 0);
+        variable ep1 : std_logic_vector(7 downto 0);
     begin
         ARESETN <= '0';
         wait for 50 ns;
         ARESETN <= '1';
         wait for 20 ns;
+    
+        -- Reset WB tree
+        status := "00000100";
+        ep0 := x"00";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+        status := "00000000";
+        ep0 := x"00";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
 
-        data := x"deadbeef";
-        addr := x"12345678";
-        SPI_EP0_WR(SCK, SDI, SDO, CS, addr, data, resp);
+        -- NOP command
+        status := "00000001";
+        ep0 := x"00";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+            -- get RET
+        status := "00000000";
+        ep0 := x"00";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
 
-        data := x"ffffffff";
-        addr := x"00000020";
-        SPI_EP0_RD(SCK, SDI, SDO, CS, addr, data, resp);
+        -- WRITE command
+        status := "00000001";
+        ep0 := x"01";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+            -- send address
+        status := "00000001";
+        ep0 := x"12";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+        status := "00000001";
+        ep0 := x"34";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+        status := "00000001";
+        ep0 := x"56";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+        status := "00000001";
+        ep0 := x"78";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+            -- send data
+        status := "00000001";
+        ep0 := x"de";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+        status := "00000001";
+        ep0 := x"ad";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+        status := "00000001";
+        ep0 := x"be";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+        status := "00000001";
+        ep0 := x"ef";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+            -- get RET
+        status := "00000000";
+        ep0 := x"00";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+
+        -- READ command
+        status := "00000001";
+        ep0 := x"02";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+            -- send address
+        status := "00000001";
+        ep0 := x"fe";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+        status := "00000001";
+        ep0 := x"dc";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+        status := "00000001";
+        ep0 := x"ba";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+        status := "00000001";
+        ep0 := x"98";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+            -- get data
+        status := "00000000";
+        ep0 := x"00";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+        status := "00000000";
+        ep0 := x"00";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+        status := "00000000";
+        ep0 := x"00";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+        status := "00000000";
+        ep0 := x"00";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+            -- get RET
+        status := "00000000";
+        ep0 := x"00";
+        ep1 := x"00";
+        HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
 
         wait for 10 us;
         report "END OF SIMULATION" severity failure;
