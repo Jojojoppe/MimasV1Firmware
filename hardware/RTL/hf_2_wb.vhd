@@ -16,6 +16,7 @@ entity hf_2_wb is
         ACK_I           : in std_logic;
         CYC_O           : out std_logic;
         STALL_I         : in std_logic;
+        ERR_I           : in std_logic;
 
         EP_DOUT         : in std_logic_vector(7 downto 0);
         EP_VOUT         : in std_logic;
@@ -59,7 +60,6 @@ begin
             sh_a <= (others => '0');
             sh_d <= (others => '0');
             hf_vout_happened <= '0';
-            hf_failure <= '0';
             hf_wr_happened <= '0';
             EP_DIN <= (others => '0');
             EP_WR <= '0';
@@ -275,6 +275,7 @@ begin
             wb_done <= '0';
             wbwrrd <= '0';
             wbrddata <= (others => '0');
+            hf_failure <= '0';
         elsif rising_edge(CLK_I) then
             case wbstate is
 
@@ -299,6 +300,7 @@ begin
                 when req =>
                     CYC_O <= '1';
                     STB_O <= '1';
+                    hf_failure <= '0';
                     if wbwrrd='1' then
                         DAT_O <= sh_d;
                         ADR_O <= sh_a;
@@ -313,6 +315,14 @@ begin
                     if ACK_I='1' then
                         wb_done <= '1';
                         wbstate <= idle;
+                        hf_failure <= '0';
+                        if wbwrrd='0' then
+                            wbrddata <= DAT_I;
+                        end if;
+                    elsif ERR_I='1' then
+                        wb_done <= '1';
+                        wbstate <= idle;
+                        hf_failure <= '1';
                         if wbwrrd='0' then
                             wbrddata <= DAT_I;
                         end if;
@@ -327,8 +337,16 @@ begin
                         if wbwrrd='0' then
                             wbrddata <= DAT_I;
                         end if;
+                        hf_failure <= '0';
                         wb_done <= '1';
                         wbstate <= idle;
+                    elsif ERR_I='1' then
+                        wb_done <= '1';
+                        wbstate <= idle;
+                        hf_failure <= '1';
+                        if wbwrrd='0' then
+                            wbrddata <= DAT_I;
+                        end if;
                     end if;
 
                 when others =>

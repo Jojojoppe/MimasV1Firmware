@@ -57,6 +57,7 @@ architecture structural of toplevel is
             ACK_I           : in std_logic;
             CYC_O           : out std_logic;
             STALL_I         : in std_logic;
+            ERR_I           : in std_logic;
 
             EP_DOUT         : in std_logic_vector(7 downto 0);
             EP_VOUT         : in std_logic;
@@ -79,6 +80,7 @@ architecture structural of toplevel is
             ACK_O           : out std_logic;
             CYC_I           : in std_logic;
             STALL_O         : out std_logic;
+            ERR_O           : out std_logic;
 
             reg_output      : out std_logic_vector(31 downto 0)
         );
@@ -114,6 +116,7 @@ architecture structural of toplevel is
     signal ACK_I : std_logic;
     signal CYC_O : std_logic;
     signal STALL_I : std_logic;
+    signal ERR_I : std_logic;
 
     signal reg_output : std_logic_vector(31 downto 0);
 
@@ -144,7 +147,7 @@ begin
         CLK_I => ACLK, RST_I => WB_ARESET,
         ADR_O => ADR_O, DAT_O => DAT_O, DAT_I => DAT_I,
         WE_O => WE_O, SEL_O => SEL_O, STB_O => STB_O,
-        ACK_I => ACK_I, CYC_O => CYC_O, STALL_I => STALL_I,
+        ACK_I => ACK_I, CYC_O => CYC_O, STALL_I => STALL_I, ERR_I => ERR_I,
         EP_DOUT => ep0_dout, EP_VOUT => ep0_vout,
         EP_DIN => ep0_din, EP_WR => ep0_wr, EP_BUSY => ep0_busy
     );
@@ -153,7 +156,7 @@ begin
         CLK_I => ACLK, RST_I => WB_ARESET,
         ADR_I => ADR_O(0 downto 0), DAT_I => DAT_O, DAT_O => DAT_I,
         WE_I => WE_O, SEL_I => SEL_O, STB_I => STB_O,
-        ACK_O => ACK_I, CYC_I => CYC_O, STALL_O => STALL_I,
+        ACK_O => ACK_I, CYC_I => CYC_O, STALL_O => STALL_I, ERR_O => ERR_I,
         reg_output => reg_output
     );
 

@@ -15,6 +15,7 @@ entity wb_reg is
         ACK_O           : out std_logic;
         CYC_I           : in std_logic;
         STALL_O         : out std_logic;
+        ERR_O           : out std_logic;
 
         reg_output      : out std_logic_vector(31 downto 0)
     );
@@ -28,6 +29,7 @@ begin
     DAT_O <= reg_val;
 
     STALL_O <= '0';
+    ERR_O <= '0';
 
     process(CLK_I, RST_I)
         variable wb_state : std_logic;
