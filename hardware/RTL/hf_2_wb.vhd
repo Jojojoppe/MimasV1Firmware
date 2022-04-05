@@ -39,11 +39,13 @@ architecture structural of hf_2_wb is
     signal sh_busy : std_logic;
 
     signal wb_wr : std_logic;
+    signal wb_rd : std_logic;
     signal wb_state : std_logic_vector(1 downto 0);
     signal wb_we : std_logic;
     signal wb_done : std_logic;
 
     signal wb_reset : std_logic;
+    signal wb_data_in : std_logic_vector(31 downto 0);
 
 begin
 
@@ -85,7 +87,7 @@ begin
                         sh_addr0 <= EP_DOUT;
                         sh_shstat <= sh_shstat(2 downto 0) & "0";
                     when "10" =>
-                        -- DATA
+                        -- DATA IN
                         sh_data3 <= sh_data2;
                         sh_data2 <= sh_data1;
                         sh_data1 <= sh_data0;
@@ -149,8 +151,29 @@ begin
                             end case;
                         when x"02" =>
                             -- READ
-                            sh_stat <= "00";
-                            sh_busy <= '0';
+                            case sh_stat is
+                                when "01" =>
+                                    sh_stat <= "00";
+                                    sh_busy <= '1';
+                                    sh_shstat <= "0000";
+                                when "00" =>
+                                    if wb_done='1' then
+                                        sh_busy <= '1';
+                                        sh_stat <= "10";
+                                        -- TODO start sending out data
+                                    else
+                                        sh_busy <= '1';
+                                        sh_stat <= "00";
+                                    end if;
+
+                                when "10" =>
+                                    sh_busy <= '0';
+                                    sh_stat <= "00";
+                                    EP_DIN <= x"AA"; -- OKE RESPONSE
+                                    EP_WR <= '1';
+                                when others =>
+                                    report "Unreachable" severity failure;
+                            end case;
                         when others =>
                             report "Unkown command" severity error;
                     end case;
@@ -162,7 +185,8 @@ begin
         end if;
     end process;
    
-    wb_wr <= '1' when (sh_stat="00" and sh_shstat="0000" and sh_busy='1') else '0';
+    wb_wr <= '1' when (sh_stat="00" and sh_shstat="0000" and sh_busy='1' and sh_cmd=x"01") else '0';
+    wb_rd <= '1' when (sh_stat="00" and sh_shstat="0000" and sh_busy='1' and sh_cmd=x"02") else '0';
     wb_reset <= '1' when sh_cmd=x"00" else '0';
 
     WE_O <= wb_we;
@@ -178,6 +202,7 @@ begin
             wb_state <= (others=>'0');
             wb_we <= '0';
             wb_done <= '0';
+            wb_data_in <= (others=>'0');
         elsif rising_edge(CLK_I) then
             case wb_state is
                 when "00" =>
@@ -190,6 +215,9 @@ begin
                         -- Start write
                         wb_state <= "01";
                         wb_we <= '1';
+                    elsif wb_rd='1' then
+                        -- Start read
+                        wb_state <= "01";
                     else
                         wb_we <= '0';
                     end if;
@@ -200,6 +228,7 @@ begin
                     STB_O <= '1';
                     ADR_O <= sh_addr3 & sh_addr2 & sh_addr1 & sh_addr0;
                     DAT_O <= sh_data3 & sh_data2 & sh_data1 & sh_data0;
+                    wb_data_in <= DAT_I;
                     wb_done <= '0';
 
                     if ACK_I='1' then

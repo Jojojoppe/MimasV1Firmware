@@ -87,7 +87,7 @@ architecture structural of toplevel is
     -- SIGNALS
     -- -------
     signal ARESETN : std_logic;
-    signal ARESET : std_logic;
+    signal WB_ARESET : std_logic;
 
     -- Debug endpoints
     signal ep0_dout : std_logic_vector(7 downto 0);
@@ -120,8 +120,6 @@ architecture structural of toplevel is
 begin
 
     ARESETN <= SW(0);
-    ARESET <= not ARESETN;
-
     LED <= reg_output(7 downto 0);
 
     cHF_interface : component HF_interface port map(
@@ -135,12 +133,15 @@ begin
     );
 
     gp_in <= "00" & SW;
-
     ep1_din <= (others=>'0');
     ep1_wr <= '0';
 
+    -- WISHBONE TREE
+    -- -------------
+    WB_ARESET <= (not ARESETN) or gp_out(0);
+
     chf_2_wb : component hf_2_wb port map(
-        CLK_I => ACLK, RST_I => ARESET,
+        CLK_I => ACLK, RST_I => WB_ARESET,
         ADR_O => ADR_O, DAT_O => DAT_O, DAT_I => DAT_I,
         WE_O => WE_O, SEL_O => SEL_O, STB_O => STB_O,
         ACK_I => ACK_I, CYC_O => CYC_O, STALL_I => STALL_I,
@@ -149,7 +150,7 @@ begin
     );
 
     cwb_reg : component wb_reg port map(
-        CLK_I => ACLK, RST_I => ARESET,
+        CLK_I => ACLK, RST_I => WB_ARESET,
         ADR_I => ADR_O(0 downto 0), DAT_I => DAT_O, DAT_O => DAT_I,
         WE_I => WE_O, SEL_I => SEL_O, STB_I => STB_O,
         ACK_O => ACK_I, CYC_I => CYC_O, STALL_O => STALL_I,
