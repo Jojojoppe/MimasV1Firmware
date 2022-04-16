@@ -11,6 +11,8 @@
 enum{
     HFINTERFACE_TASK_NOP = 0,
     HFINTERFACE_TASK_TRANSFER = 1,
+    HFINTERFACE_TASK_HRST = 2,
+    HFINTERFACE_TASK_LRST = 3,
 } HFINTERFACE_TASK;
 
 uint8_t hfinterface_action;
@@ -52,21 +54,6 @@ uint8_t hfinterface_buffer_rd(uint8_t * buf, uint8_t * op, uint8_t * cnt, uint8_
     return 1;
 }
 
-uint8_t hfinterface_transfer(uint8_t dout){
-    uint8_t din;
-    for(uint8_t i=0; i<8; i++){
-        HFSDO_LAT = (dout>>7)&1;
-        dout = dout<<1;
-        HFCLK_LAT = 1;
-        din = din<<1;
-        din |= HFSDI_PORT;
-        HFCLK_LAT = 0;
-    }
-    HFSDO_LAT = 0;
-    HFCLK_LAT = 0;
-    return din;
-}
-
 uint8_t hfinterface_transfer_set(){
     uint8_t status = hfinterface_gpio_out<<2;
     uint8_t ep0 = 0;
@@ -83,9 +70,6 @@ uint8_t hfinterface_transfer_set(){
     spi_init_slow();
     spi_deselect_flash();
 
-    // status = hfinterface_transfer(status);
-    // ep0 = hfinterface_transfer(ep0);
-    // ep1 = hfinterface_transfer(ep1);
     status = spi_transfer(status);
     ep0 = spi_transfer(ep0);
     ep1 = spi_transfer(ep1);
@@ -126,15 +110,9 @@ void hfinterface_init(){
     hfinterface_gpio_out = 0;
     hfinterface_gpio_in = 0xaa;
     
-    HFCLK_ANS = DIGITAL;
-    HFCLK_LAT = 0;
-    HFCLK_TRIS = OUTPUT;
-    
-    HFSDI_ANS = DIGITAL;
-    HFSDI_TRIS = INPUT;
-    
-    HFSDO_LAT = 0;
-    HFSDO_TRIS = OUTPUT;
+    HFRST_ANS = DIGITAL;
+    HFRST_LAT = 0;
+    HFRST_TRIS = OUTPUT;
 }
 
 void hfinterface_task(){
@@ -191,6 +169,14 @@ void hfinterface_packet_handle(){
 
 void hfinterface_cmd_handle(){
     switch(OUTPacket[1]){
+        
+        case HFINTERFACE_TASK_HRST:
+            HFRST_LAT = 1;
+            break;
+
+        case HFINTERFACE_TASK_LRST:
+            HFRST_LAT = 0;
+            break;
         
         case HFINTERFACE_TASK_TRANSFER:{
             // Set gpio_out and write to out buffers

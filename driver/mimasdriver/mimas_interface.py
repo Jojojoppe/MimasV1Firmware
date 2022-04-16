@@ -1,6 +1,7 @@
 import usb1
 import struct
 from typing import Callable, Tuple
+import time
 
 # Constants
 VENDOR_ID = 0x0000
@@ -22,6 +23,8 @@ FLASH_COMMANDS_GETID = 3
 
 HFINTERFACE_COMMANDS_NOP = 0
 HFINTERFACE_COMMANDS_TRANSFER = 1
+HFINTERFACE_COMMANDS_HRST = 2
+HFINTERFACE_COMMANDS_LRST = 3
 
 class MimasInterface:
     """Class which is used for interfacing with Mimas
@@ -208,3 +211,12 @@ class MimasInterface:
             ep1 = rdat[3+ep0len:3+ep0len+ep1len]
 
             return gpio, ep0, ep1
+
+    def hfinterface_reset(self) -> None:
+        """ Reset the FPGA"""
+        with self._hdl.claimInterface(INTERFACE):
+            cmd = struct.pack(">BB", MIMAS_COMMANDS_HFINTERFACE, HFINTERFACE_COMMANDS_HRST)
+            self._hdl.bulkWrite(ENDPOINT, cmd, timeout=self.usbtimeout)
+            time.sleep(0.2)
+            cmd = struct.pack(">BB", MIMAS_COMMANDS_HFINTERFACE, HFINTERFACE_COMMANDS_LRST)
+            self._hdl.bulkWrite(ENDPOINT, cmd, timeout=self.usbtimeout)

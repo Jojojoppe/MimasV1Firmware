@@ -10,7 +10,8 @@ entity toplevel is
 
         SCK : in std_logic;
         SDI : in std_logic;
-        SDO : out std_logic
+        SDO : out std_logic;
+        HFRST : in std_logic
     );
 end toplevel;
 
@@ -122,7 +123,7 @@ architecture structural of toplevel is
 
 begin
 
-    ARESETN <= SW(0);
+    ARESETN <= not HFRST;
     LED <= reg_output(7 downto 0);
 
     cHF_interface : component HF_interface port map(

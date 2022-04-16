@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import mimasdriver
+import time
 
 VERSION = "1.0.0"
 
@@ -18,6 +19,7 @@ def print_usage():
     print("-r bitfile                   : read the programmed bitfile (reads 512KB)")
     print("-P addr binfile              : program the SPI flash from a specific address. Address MUST be in hexadecimal")
     print("-R addr length binfile       : read the SPI flash from a specific address for a specific length. Address and length MUST be in hexadecimal")
+    print("-x                           : reset the FPGA")
 
 if __name__=="__main__":
     i = 1
@@ -88,6 +90,7 @@ if __name__=="__main__":
                 print("Programming SPI flash")
                 mif.flash_program(file, pfunc=pfunc, addr=addr)
                 print('')
+                time.sleep(3)
 
         # ###################
         # ###################
@@ -115,6 +118,14 @@ if __name__=="__main__":
                 print("Reading SPI flash starting at %08x for %08x"%(addr, length))
                 mif.flash_read(file, pfunc=pfunc, addr=addr, flen=length)
                 print('')
+
+        # ###################
+        # ###################
+
+        elif arg=="-x":
+            with mimasdriver.MimasInterface() as mif:
+                print("Resetting the FPGA")
+                mif.hfinterface_reset()
 
         # ###################
         # ###################

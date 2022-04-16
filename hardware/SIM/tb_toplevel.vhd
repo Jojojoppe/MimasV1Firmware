@@ -17,7 +17,8 @@ architecture behavioural of tb_toplevel is
 
             SCK : in std_logic;
             SDI : in std_logic;
-            SDO : out std_logic
+            SDO : out std_logic;
+            HFRST : in std_logic
         );
     end component;
 
@@ -210,8 +211,9 @@ begin
 
     dut : component toplevel port map(
         ACLK => ACLK,
+        HFRST => not ARESETN,
         LED => LED,
-        SW => ARESETN & ARESETN & ARESETN & ARESETN,
+        SW => x"0",
         SCK => SCK, SDI => SDI, SDO => SDO
     );
 

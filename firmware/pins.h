@@ -50,19 +50,9 @@
 
 // HF INTERFACE
 // ------------
-#define HFCLK_TRIS              TRISCbits.TRISC0
-#define HFCLK_LAT               LATCbits.LATC0
-#define HFCLK_PORT              PORTCbits.RC0
-#define HFCLK_ANS               ANSELbits.ANS4
-
-#define HFSDO_TRIS              TRISBbits.TRISB7
-#define HFSDO_LAT               LATBbits.LATB7
-#define HFSDO_PORT              PORTBbits.RB7
-#define HFSDO_WPU               WPUBbits.WPUB7
-
-#define HFSDI_TRIS              TRISCbits.TRISC2
-#define HFSDI_LAT               LATCbits.LATC2
-#define HFSDI_PORT              PORTCbits.RC2
-#define HFSDI_ANS               ANSELbits.ANS6
+#define HFRST_TRIS              TRISCbits.TRISC0
+#define HFRST_LAT               LATCbits.LATC0
+#define HFRST_PORT              PORTCbits.RC0
+#define HFRST_ANS               ANSELbits.ANS4
 
 #endif
