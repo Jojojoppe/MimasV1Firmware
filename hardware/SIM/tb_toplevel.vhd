@@ -104,6 +104,8 @@ begin
         ep1 := x"00";
         HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
 
+        wait for 20 us;
+
         -- NOP command
         status := "00000001";
         ep0 := x"00";
@@ -114,6 +116,8 @@ begin
         ep0 := x"00";
         ep1 := x"00";
         HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+
+        wait for 20 us;
 
         -- WRITE command
         status := "00000001";
@@ -160,6 +164,8 @@ begin
         ep1 := x"00";
         HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
 
+        wait for 20 us;
+
         -- READ command
         status := "00000001";
         ep0 := x"02";
@@ -204,6 +210,8 @@ begin
         ep0 := x"00";
         ep1 := x"00";
         HF_TRANSFER(SCK, SDI, SDO, CS, status, ep0, ep1);
+        
+        wait for 20 us;
 
         wait for 10 us;
         report "END OF SIMULATION" severity failure;
